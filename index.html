@@ -25,6 +25,9 @@
     <input type="file" accept="audio/*" />
     <button>Build Spectrogram</button>
   </div>
+  <div>
+    <input type="range" min="720" max="1080">
+  </div>
   <canvas width="1080" height="720"></canvas>
 
   <script type="module">
@@ -38,16 +41,19 @@
     );
     __wbg_set_wasm(wasm.instance.exports);
 
+    let height = 1920;
+    let width = 1080;
+
     /** @type {Float32Array} */
     let samples;
 
     /** @type {HTMLCanvasElement} */
     const canvas = document.querySelector("canvas");
 
-    const button = document.querySelector("button");
-    button.addEventListener("click", () => {
+    const paintSpectrogram = () => {
+      console.log(samples, width, height)
       console.time("wasm parse");
-      const canvasArray = get_spectrogram(samples);
+      const canvasArray = get_spectrogram(samples, width, height);
       console.timeEnd("wasm parse");
 
       console.time("fixing clamped array");
@@ -61,6 +67,7 @@
           j++;
         }
       }
+      console.log(newArr, clampedArray)
       console.timeEnd("fixing clamped array");
 
       const ctx = canvas.getContext('2d')
@@ -68,13 +75,24 @@
       const imageData = new ImageData(newArr, 1920, 1080)
       ctx.putImageData(imageData, 0, 0);
       console.timeEnd("canvas paint");
-    });
+    }
+
+    const inputRange = document.querySelector(`input[type=range]`);
+    inputRange.addEventListener('input', () => {
+      width = inputRange.value;
+      console.log('slider')
+      paintSpectrogram();
+    })
+
+    const button = document.querySelector("button");
+    button.addEventListener("click", paintSpectrogram);
 
     const fileInput = document.querySelector("input[type=file]");
-    fileInput.addEventListener("input", async (e) => {
+    fileInput.addEventListener('input', async () => {
       /** @type {File} */
       const file = fileInput.files[0];
       const buffer = await file.arrayBuffer();
+      console.log(file)
 
       const sampleRate =
         file.type === "audio/wav"

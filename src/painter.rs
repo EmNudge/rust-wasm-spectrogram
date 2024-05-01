@@ -1,4 +1,4 @@
-use crate::colormap::{ map_hot, Color };
+use crate::colormap::{map_hot, Color};
 
 pub struct ImagePainter {
     pub buffer: Box<[u8]>,
@@ -23,10 +23,10 @@ impl ImagePainter {
     }
 
     pub fn place_point_perc(&mut self, x_perc: f32, y_perc: f32, mag_perc: f32) {
-        let x_pos = x_perc * (self.width as f32);
-        let y_pos = y_perc * (self.height as f32);
-        let color = map_hot(mag_perc);
-
-        self.place_point(x_pos as usize, y_pos as usize, color);
+        self.place_point(
+            (x_perc * (self.width as f32)) as usize,
+            (y_perc * (self.height as f32)) as usize,
+            map_hot(mag_perc),
+        );
     }
 }
