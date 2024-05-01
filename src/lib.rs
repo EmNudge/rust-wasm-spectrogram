@@ -8,8 +8,7 @@ mod painter;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-pub fn get_spectrogram(samples: Vec<f32>, width: usize, height: usize, overlap_div: usize) -> Box<[u8]> {
-    let frame_size = 1024;
+pub fn get_spectrogram(samples: Vec<f32>, width: usize, height: usize, overlap_div: usize, frame_size: usize) -> Box<[u8]> {
     let fft = Radix4::new(frame_size, FftDirection::Forward);
 
     let mut img = painter::ImagePainter::new(width, height);
