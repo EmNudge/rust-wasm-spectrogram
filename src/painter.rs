@@ -1,6 +1,5 @@
 use crate::colormap;
-use image::{ImageBuffer, Rgb};
-use rand::Rng;
+use image::{ImageBuffer, Rgb, };
 
 pub struct ImagePainter(ImageBuffer<Rgb<u8>, Vec<u8>>);
 
@@ -16,19 +15,7 @@ impl ImagePainter {
         self.0.put_pixel(x_pos as u32, y_pos as u32, color);
     }
 
-    pub fn save_rand(&self) {
-        let path = {
-            let mut rng = rand::thread_rng();
-            let random_ascii = (0..5)
-                .map(|_| rng.gen_range(b'a'..=b'z') as char)
-                .collect::<String>();
-
-            let path_str = format!("spectrogram-{}.png", random_ascii);
-            std::path::PathBuf::from(path_str)
-        };
-
-        dbg!(&path);
-
-        self.0.save(path).unwrap();
+    pub fn get_buffer(self) -> Vec<u8> {
+        self.0.into_vec()
     }
 }

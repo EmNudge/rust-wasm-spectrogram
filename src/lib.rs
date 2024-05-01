@@ -1,22 +1,11 @@
-use hound;
-use rustfft::algorithm::Radix4;
-use rustfft::num_complex::Complex;
-use rustfft::{Fft, FftDirection};
+use wasm_bindgen::prelude::*;
+use rustfft::{algorithm::Radix4, num_complex::Complex, Fft, FftDirection};
 
 mod colormap;
 mod painter;
 
-fn main() {
-    let args: Vec<_> = std::env::args().collect();
-    let path = args.get(1).expect("no file");
-
-    let mut reader = hound::WavReader::open(path).expect("not a valid WAV file");
-
-    let samples = reader
-        .samples::<i16>()
-        .filter_map(|s| s.ok().map(|s| s as f32))
-        .collect::<Vec<f32>>();
-
+#[wasm_bindgen]
+pub fn get_spectrogram(samples: Vec<f32>) -> Vec<u8> {
     let frame_size = 1024;
     let fft = Radix4::new(frame_size, FftDirection::Forward);
 
@@ -73,5 +62,5 @@ fn main() {
         }
     }
 
-    img.save_rand();
+    img.get_buffer()
 }

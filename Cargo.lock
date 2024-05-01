@@ -231,16 +231,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fft-rsqnxjv"
-version = "0.1.0"
-dependencies = [
- "hound",
- "image",
- "rand",
- "rustfft",
-]
-
-[[package]]
 name = "flate2"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -301,12 +291,6 @@ name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
-
-[[package]]
-name = "hound"
-version = "3.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62adaabb884c94955b19907d60019f4e145d091c75345379e70d1ee696f7854f"
 
 [[package]]
 name = "image"
@@ -1041,6 +1025,15 @@ name = "wasm-bindgen-shared"
 version = "0.2.92"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
+
+[[package]]
+name = "wasm-spectrogram"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "rustfft",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "weezl"
