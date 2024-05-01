@@ -4,8 +4,11 @@ use rustfft::{algorithm::Radix4, num_complex::Complex, Fft, FftDirection};
 mod colormap;
 mod painter;
 
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
 #[wasm_bindgen]
-pub fn get_spectrogram(samples: Vec<f32>) -> Vec<u8> {
+pub fn get_spectrogram(samples: Vec<f32>) -> Box<[u8]> {
     let frame_size = 1024;
     let fft = Radix4::new(frame_size, FftDirection::Forward);
 
@@ -54,7 +57,7 @@ pub fn get_spectrogram(samples: Vec<f32>) -> Vec<u8> {
             .unwrap_or(&1f32);
 
         for (j, magnitude) in magnitudes.iter().map(|mag| mag / max_mag).enumerate() {
-            img.place_point(
+            img.place_point_perc(
                 i as f32 / frame_count as f32,
                 j as f32 / frame_height as f32,
                 magnitude,
@@ -62,5 +65,5 @@ pub fn get_spectrogram(samples: Vec<f32>) -> Vec<u8> {
         }
     }
 
-    img.get_buffer()
+    img.buffer
 }

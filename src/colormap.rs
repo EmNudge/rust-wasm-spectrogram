@@ -1,13 +1,5 @@
-use image::Rgb;
-
 #[derive(Clone, Copy)]
-pub struct Color(u8, u8, u8);
-
-impl Color {
-    pub fn as_rgb(&self) -> Rgb<u8> {
-        Rgb([self.0, self.1, self.2])
-    }
-}
+pub struct Color(pub u8, pub u8, pub u8);
 
 pub fn map_hot(percentage: f32) -> Color {
     let black = Color(0, 0, 0);
