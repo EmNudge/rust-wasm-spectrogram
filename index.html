@@ -23,10 +23,12 @@
   <h1>Wasm Demo</h1>
   <div>
     <input type="file" accept="audio/*" />
-    <button>Build Spectrogram</button>
   </div>
   <div>
-    <input type="range" min="720" max="1080">
+    <label>
+      <span>Overlap: <span class="overlap">25</span>
+      <input type="range" value="25" min="2" max="50">
+    </label>
   </div>
   <canvas width="1080" height="720"></canvas>
 
@@ -43,18 +45,24 @@
 
     let height = 1920;
     let width = 1080;
+    let overlap = 25;
 
     /** @type {Float32Array} */
     let samples;
+
+    const getCanvasArr = () => {
+      console.time("wasm parse");
+      const canvasArray = get_spectrogram(samples, width, height, overlap);
+      console.timeEnd("wasm parse");
+
+      return canvasArray;
+    };
 
     /** @type {HTMLCanvasElement} */
     const canvas = document.querySelector("canvas");
 
     const paintSpectrogram = () => {
-      console.log(samples, width, height)
-      console.time("wasm parse");
-      const canvasArray = get_spectrogram(samples, width, height);
-      console.timeEnd("wasm parse");
+      const canvasArray = getCanvasArr();
 
       console.time("fixing clamped array");
       const newArr = new Uint8ClampedArray(4 * 1920 * 1080);
@@ -70,7 +78,8 @@
       console.log(newArr, clampedArray)
       console.timeEnd("fixing clamped array");
 
-      const ctx = canvas.getContext('2d')
+      const ctx = canvas.getContext('2d');
+      
       console.time("canvas paint");
       const imageData = new ImageData(newArr, 1920, 1080)
       ctx.putImageData(imageData, 0, 0);
@@ -79,13 +88,12 @@
 
     const inputRange = document.querySelector(`input[type=range]`);
     inputRange.addEventListener('input', () => {
-      width = inputRange.value;
-      console.log('slider')
-      paintSpectrogram();
+      overlap = inputRange.value;
+      document.querySelector('.overlap').textContent = overlap;
+      if (samples) {
+        paintSpectrogram();
+      }
     })
-
-    const button = document.querySelector("button");
-    button.addEventListener("click", paintSpectrogram);
 
     const fileInput = document.querySelector("input[type=file]");
     fileInput.addEventListener('input', async () => {
@@ -104,6 +112,8 @@
       const audioBuffer = await audioCtx.decodeAudioData(buffer);
       samples = audioBuffer.getChannelData(0);
       console.timeEnd("audio data parse");
+
+      paintSpectrogram();
     });
   </script>
 </body>

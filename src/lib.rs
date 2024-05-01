@@ -8,20 +8,20 @@ mod painter;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-pub fn get_spectrogram(samples: Vec<f32>, width: usize, height: usize) -> Box<[u8]> {
+pub fn get_spectrogram(samples: Vec<f32>, width: usize, height: usize, overlap_div: usize) -> Box<[u8]> {
     let frame_size = 1024;
     let fft = Radix4::new(frame_size, FftDirection::Forward);
 
     let mut img = painter::ImagePainter::new(width, height);
 
     let windows_iter = {
-        let overlap = frame_size / 50;
+        let overlap = frame_size / overlap_div;
         samples.windows(frame_size).step_by(overlap).enumerate()
     };
 
     let frame_count = windows_iter.size_hint().0;
 
-    let mut scratch_space = vec![Default::default(); frame_size];
+    let mut scratch_space = vec![Default::default(); frame_size].into_boxed_slice();
 
     for (i, frame) in windows_iter {
         let mut frame_window: Vec<Complex<f32>> = frame
