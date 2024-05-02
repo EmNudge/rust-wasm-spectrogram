@@ -16,7 +16,7 @@ impl ImagePainter {
     }
 
     pub fn place_point(&mut self, x: usize, y: usize, color: Color) {
-        let base_index = x * y;
+        let base_index = y * self.height + x;
         self.buffer[base_index] = color.0;
         self.buffer[base_index + 1] = color.1;
         self.buffer[base_index + 2] = color.2;
