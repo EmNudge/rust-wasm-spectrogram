@@ -1,4 +1,9 @@
 import { __wbg_set_wasm, get_spectrogram } from "./wasm/wasm_spectrogram_bg.js";
+import {
+  getAudioSignalFromBuffer,
+  getBufferFromCache,
+  placeFileInCache,
+} from "./lib.js";
 
 const wasm = await WebAssembly.instantiateStreaming(
   fetch("./wasm/wasm_spectrogram_bg.wasm")
@@ -15,7 +20,13 @@ let samples;
 
 const getCanvasArr = () => {
   console.time("wasm parse");
-  const canvasArray = get_spectrogram(samples, width, height, overlap, frameSize);
+  const canvasArray = get_spectrogram(
+    samples,
+    width,
+    height,
+    overlap,
+    frameSize
+  );
   console.timeEnd("wasm parse");
 
   return canvasArray;
@@ -68,21 +79,24 @@ frameSizeRange.addEventListener("input", () => {
 });
 
 const fileInput = document.querySelector("input[type=file]");
+
+getBufferFromCache("audio-file-buffer").then(async (blob) => {
+  if (!blob) return;
+
+  const buffer = await blob.arrayBuffer();
+  samples = await getAudioSignalFromBuffer(buffer);
+  paintSpectrogram();
+});
+
 fileInput.addEventListener("input", async () => {
   /** @type {File} */
   const file = fileInput.files[0];
+  if (!file) return;
+
   const buffer = await file.arrayBuffer();
 
-  const sampleRate =
-    file.type === "audio/wav"
-      ? new DataView(buffer).getUint32(24, true)
-      : 44_100;
+  void placeFileInCache(file, "audio-file-buffer");
 
-  console.time("audio data parse");
-  const audioCtx = new AudioContext({ sampleRate });
-  const audioBuffer = await audioCtx.decodeAudioData(buffer);
-  samples = audioBuffer.getChannelData(0);
-  console.timeEnd("audio data parse");
-
+  samples = await getAudioSignalFromBuffer(buffer, file.type);
   paintSpectrogram();
 });
