@@ -11,8 +11,8 @@ const wasm = await WebAssembly.instantiateStreaming(
 );
 __wbg_set_wasm(wasm.instance.exports);
 
-let height = 1920;
 let width = 1080;
+let height = 720;
 let overlap = 25;
 let frameSize = 1024;
 
@@ -40,6 +40,7 @@ ctx.imageSmoothingEnabled = false;
 
 const paintSpectrogram = () => {
   const canvasArray = new Uint8ClampedArray(getCanvasArr());
+  console.log({ width, height })
   const imageData = new ImageData(canvasArray, width, height);
 
   console.time("canvas paint");
@@ -55,14 +56,14 @@ makeSlider("Bin Power", [1, 4], 25, (num) => {
   frameSize = 2 << (7 + num);
   if (samples) paintSpectrogram();
 });
-makeSlider("Width", [500, 2000], 1080, (num) => {
+makeSlider("Width", [500, 1080], 1080, (num) => {
   width = num;
-  ctx.clearRect(0, 0, 1920, 1080);
+  ctx.clearRect(0, 0, 1080, 1080);
   if (samples) paintSpectrogram();
 });
-makeSlider("Height", [1000, 3000], 1920, (num) => {
+makeSlider("Height", [500, 720], 720, (num) => {
   height = num;
-  ctx.clearRect(0, 0, 1920, 1080);
+  ctx.clearRect(0, 0, 1920, 720);
   if (samples) paintSpectrogram();
 });
 
