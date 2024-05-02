@@ -23,3 +23,27 @@ export const getAudioSignalFromBuffer = async (buffer, type = "audio/wav") => {
 
   return data;
 };
+
+const slidersDiv = document.querySelector("div.sliders");
+
+/**
+ * @param {string} title 
+ * @param {[number, number]} range 
+ * @param {number} def 
+ * @param {(value: number) => void} onVal 
+ */
+export const makeSlider = (title, range, def, onVal) => {
+  const label = document.createElement('label');
+  label.innerHTML = `<span>${title}: <output>${def}</output>`;
+  label.innerHTML += `\n<input type="range" value="${def}" min="${range[0]}" max="${range[1]}" step="1">`;
+  
+  const output = label.querySelector('output');
+  const input = label.querySelector('input');
+  input.addEventListener('input', () => {
+    const num = Number(input.value);
+    output.textContent = num;
+    onVal(num);
+  })
+  
+  slidersDiv.append(label);
+}

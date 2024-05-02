@@ -2,6 +2,7 @@ import { __wbg_set_wasm, get_spectrogram } from "./wasm/wasm_spectrogram_bg.js";
 import {
   getAudioSignalFromBuffer,
   getBufferFromCache,
+  makeSlider,
   placeFileInCache,
 } from "./lib.js";
 
@@ -34,48 +35,35 @@ const getCanvasArr = () => {
 
 /** @type {HTMLCanvasElement} */
 const canvas = document.querySelector("canvas");
+const ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
 
 const paintSpectrogram = () => {
-  const canvasArray = getCanvasArr();
-
-  console.time("fixing clamped array");
-  const newArr = new Uint8ClampedArray(4 * 1920 * 1080);
-  const clampedArray = new Uint8ClampedArray(canvasArray.buffer);
-  for (let i = 0, j = 0; i < newArr.length; i++) {
-    if ((i + 1) % 4 === 0) {
-      // every 5th position (0-indexed)
-      newArr[i] = 255;
-    } else {
-      newArr[i] = clampedArray[j];
-      j++;
-    }
-  }
-  console.timeEnd("fixing clamped array");
-
-  const ctx = canvas.getContext("2d");
+  const canvasArray = new Uint8ClampedArray(getCanvasArr());
+  const imageData = new ImageData(canvasArray, width, height);
 
   console.time("canvas paint");
-  const imageData = new ImageData(newArr, 1920, 1080);
   ctx.putImageData(imageData, 0, 0);
   console.timeEnd("canvas paint");
 };
 
-const overlapRange = document.querySelector(`input[type=range].overlap`);
-overlapRange.addEventListener("input", () => {
-  overlap = overlapRange.value;
-  document.querySelector("span.overlap").textContent = overlap;
-  if (samples) {
-    paintSpectrogram();
-  }
+makeSlider("Overlap", [2, 50], 25, (num) => {
+  overlap = num;
+  if (samples) paintSpectrogram();
 });
-
-const frameSizeRange = document.querySelector(`input[type=range].frame-size`);
-frameSizeRange.addEventListener("input", () => {
-  frameSize = 2 << (7 + Number(frameSizeRange.value));
-  document.querySelector("span.frame-size").textContent = frameSize;
-  if (samples) {
-    paintSpectrogram();
-  }
+makeSlider("Bin Power", [1, 4], 25, (num) => {
+  frameSize = 2 << (7 + num);
+  if (samples) paintSpectrogram();
+});
+makeSlider("Width", [500, 2000], 1080, (num) => {
+  width = num;
+  ctx.clearRect(0, 0, 1920, 1080);
+  if (samples) paintSpectrogram();
+});
+makeSlider("Height", [1000, 3000], 1920, (num) => {
+  height = num;
+  ctx.clearRect(0, 0, 1920, 1080);
+  if (samples) paintSpectrogram();
 });
 
 const fileInput = document.querySelector("input[type=file]");

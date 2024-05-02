@@ -1,5 +1,6 @@
-use wasm_bindgen::prelude::*;
+use colormap::map_hot;
 use rustfft::{algorithm::Radix4, num_complex::Complex, Fft, FftDirection};
+use wasm_bindgen::prelude::*;
 
 mod colormap;
 mod painter;
@@ -8,7 +9,13 @@ mod painter;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-pub fn get_spectrogram(samples: Vec<f32>, width: usize, height: usize, overlap_div: usize, frame_size: usize) -> Box<[u8]> {
+pub fn get_spectrogram(
+    samples: Vec<f32>,
+    width: usize,
+    height: usize,
+    overlap_div: usize,
+    frame_size: usize,
+) -> Box<[u8]> {
     let fft = Radix4::new(frame_size, FftDirection::Forward);
 
     let mut img = painter::ImagePainter::new(width, height);
@@ -22,7 +29,7 @@ pub fn get_spectrogram(samples: Vec<f32>, width: usize, height: usize, overlap_d
 
     let mut scratch_space = vec![Default::default(); frame_size].into_boxed_slice();
 
-    for (i, frame) in windows_iter {
+    for (width_index, frame) in windows_iter {
         let mut frame_window: Vec<Complex<f32>> = frame
             .iter()
             .enumerate()
@@ -38,23 +45,27 @@ pub fn get_spectrogram(samples: Vec<f32>, width: usize, height: usize, overlap_d
 
         let frame_height = frame_window.len() / 2;
 
-        let magnitudes: Vec<_> = frame_window
-            .iter()
-            .skip(frame_height)
-            .map(|value| value.norm())
-            .collect();
+        let magnitudes = {
+            let magnitudes = frame_window
+                .iter()
+                .skip(frame_height)
+                .map(|value| value.norm())
+                .collect::<Vec<_>>();
 
-        let max_mag = magnitudes
-            .iter()
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap_or(&1f32);
+            let max_mag = magnitudes.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+            magnitudes
+                .into_iter()
+                .map(|mag| mag / max_mag)
+                .collect::<Vec<_>>()
+        };
 
-        for (j, magnitude) in magnitudes.iter().map(|mag| mag / max_mag).enumerate() {
-            img.place_point_perc(
-                i as f32 / frame_count as f32,
-                j as f32 / frame_height as f32,
-                magnitude,
-            );
+        let width_perc = width_index as f32 / frame_count as f32;
+        let x_pos = (width_perc * (img.width as f32)) as usize;
+
+        for (height_index, magnitude) in magnitudes.into_iter().enumerate() {
+            let height_perc = height_index as f32 / frame_height as f32;
+            let y_pos = (height_perc * (img.height as f32)) as usize;
+            img.place_point(x_pos, y_pos, map_hot(magnitude));
         }
     }
 
