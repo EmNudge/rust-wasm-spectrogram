@@ -23,8 +23,6 @@ pub fn get_spectrogram(
         samples.windows(bin_size).step_by(samples.len() / width).enumerate()
     };
 
-    let frame_count = windows_iter.size_hint().0;
-
     let mut scratch_space = vec![Default::default(); bin_size].into_boxed_slice();
 
     for (width_index, frame) in windows_iter {
@@ -51,19 +49,17 @@ pub fn get_spectrogram(
                 .collect::<Vec<_>>();
 
             let max_mag = magnitudes.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+
             magnitudes
                 .into_iter()
                 .map(|mag| mag / max_mag)
                 .collect::<Vec<_>>()
         };
 
-        let width_perc = width_index as f32 / frame_count as f32;
-        let x_pos = (width_perc * (img.width as f32)) as usize;
-
         for (height_index, magnitude) in magnitudes.into_iter().enumerate() {
             let height_perc = height_index as f32 / frame_height as f32;
             let y_pos = (height_perc * (img.height as f32)) as usize;
-            img.place_point(x_pos, y_pos, map_hot(magnitude));
+            img.place_point(width_index, y_pos, map_hot(magnitude));
         }
     }
 

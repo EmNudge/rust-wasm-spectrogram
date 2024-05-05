@@ -37,13 +37,17 @@ export const makeSlider = (title, range, def, onVal) => {
   label.innerHTML = `<span>${title}: <output>${def}</output>`;
   label.innerHTML += `\n<input type="range" value="${def}" min="${range[0]}" max="${range[1]}" step="1">`;
   
-  const output = label.querySelector('output');
-  const input = label.querySelector('input');
-  input.addEventListener('input', () => {
+  const listener = () => {
     const num = Number(input.value);
     output.textContent = num;
     onVal(num);
-  })
+  };
+
+  const output = label.querySelector('output');
+  const input = label.querySelector('input');
+  input.addEventListener('input', listener);
   
+  listener();
+
   slidersDiv.append(label);
 }

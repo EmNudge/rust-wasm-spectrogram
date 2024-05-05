@@ -13,7 +13,7 @@ __wbg_set_wasm(wasm.instance.exports);
 
 let width = 1080;
 let height = 720;
-let frameSize = 1024;
+let frameSize = 512;
 
 /** @type {Float32Array} */
 let samples;
@@ -38,7 +38,6 @@ ctx.imageSmoothingEnabled = false;
 
 const paintSpectrogram = () => {
   const canvasArray = new Uint8ClampedArray(getCanvasArr());
-  console.log({ width, height })
   const imageData = new ImageData(canvasArray, width, height);
 
   console.time("canvas paint");
@@ -46,12 +45,8 @@ const paintSpectrogram = () => {
   console.timeEnd("canvas paint");
 };
 
-makeSlider("Overlap", [2, 50], 25, (num) => {
-  overlap = num;
-  if (samples) paintSpectrogram();
-});
-makeSlider("Bin Power", [1, 4], 25, (num) => {
-  frameSize = 2 << (7 + num);
+makeSlider("Bin Power", [1, 4], 1, (num) => {
+  frameSize = 2 << (6 + num);
   if (samples) paintSpectrogram();
 });
 makeSlider("Width", [500, 1080], 1080, (num) => {
