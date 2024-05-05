@@ -13,7 +13,6 @@ __wbg_set_wasm(wasm.instance.exports);
 
 let width = 1080;
 let height = 720;
-let overlap = 25;
 let frameSize = 1024;
 
 /** @type {Float32Array} */
@@ -25,7 +24,6 @@ const getCanvasArr = () => {
     samples,
     width,
     height,
-    overlap,
     frameSize
   );
   console.timeEnd("wasm parse");

@@ -13,21 +13,19 @@ pub fn get_spectrogram(
     samples: Vec<f32>,
     width: usize,
     height: usize,
-    overlap_div: usize,
-    frame_size: usize,
+    bin_size: usize,
 ) -> Box<[u8]> {
-    let fft = Radix4::new(frame_size, FftDirection::Forward);
+    let fft = Radix4::new(bin_size, FftDirection::Forward);
 
     let mut img = painter::ImagePainter::new(width, height);
 
     let windows_iter = {
-        let overlap = frame_size / overlap_div;
-        samples.windows(frame_size).step_by(overlap).enumerate()
+        samples.windows(bin_size).step_by(samples.len() / width).enumerate()
     };
 
     let frame_count = windows_iter.size_hint().0;
 
-    let mut scratch_space = vec![Default::default(); frame_size].into_boxed_slice();
+    let mut scratch_space = vec![Default::default(); bin_size].into_boxed_slice();
 
     for (width_index, frame) in windows_iter {
         let mut frame_window: Vec<Complex<f32>> = frame
@@ -36,7 +34,7 @@ pub fn get_spectrogram(
             .map(|(j, &s)| {
                 let window = 0.24
                     - 0.6
-                        * (2.0 * std::f32::consts::PI * j as f32 / (frame_size as f32 - 1.0)).cos();
+                        * (2.0 * std::f32::consts::PI * j as f32 / (bin_size as f32 - 1.0)).cos();
                 Complex::new(s * window, 0.0)
             })
             .collect();
