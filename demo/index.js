@@ -2,6 +2,7 @@ import { __wbg_set_wasm, get_spectrogram } from "./wasm/wasm_spectrogram_bg.js";
 import {
   getAudioSignalFromBuffer,
   getBufferFromCache,
+  makeOption,
   makeSlider,
   placeFileInCache,
 } from "./lib.js";
@@ -14,6 +15,7 @@ __wbg_set_wasm(wasm.instance.exports);
 let width = 1080;
 let height = 720;
 let frameSize = 512;
+let windowingFunc = 0;
 
 /** @type {Float32Array} */
 let samples;
@@ -24,7 +26,8 @@ const getCanvasArr = () => {
     samples,
     width,
     height,
-    frameSize
+    frameSize,
+    windowingFunc,
   );
   console.timeEnd("wasm parse");
 
@@ -46,17 +49,21 @@ const paintSpectrogram = () => {
 };
 
 makeSlider("Bin Power", [1, 4], 1, (num) => {
-  frameSize = 2 << (6 + num);
+  frameSize = 2 << (5 + num);
   if (samples) paintSpectrogram();
 });
 makeSlider("Width", [500, 1080], 1080, (num) => {
   width = num;
-  ctx.clearRect(0, 0, 1080, 1080);
+  ctx.clearRect(0, 0, 1080, 720);
   if (samples) paintSpectrogram();
 });
 makeSlider("Height", [500, 720], 720, (num) => {
   height = num;
-  ctx.clearRect(0, 0, 1920, 720);
+  ctx.clearRect(0, 0, 1080, 720);
+  if (samples) paintSpectrogram();
+});
+makeOption("Windowing Function", ["Hann", "Blackman Harris"], "Hann", funcName => {
+  windowingFunc = funcName === 'Hann' ? 0 : 1;
   if (samples) paintSpectrogram();
 });
 

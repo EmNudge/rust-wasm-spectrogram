@@ -14,6 +14,7 @@ pub fn get_spectrogram(
     width: usize,
     height: usize,
     bin_size: usize,
+    window_function: Option<usize>
 ) -> Box<[u8]> {
     let fft = Radix4::new(bin_size, FftDirection::Forward);
 
@@ -26,15 +27,13 @@ pub fn get_spectrogram(
 
     let mut scratch_space = vec![Default::default(); bin_size].into_boxed_slice();
 
+    let window_func = if window_function.unwrap_or(0) == 0 { hann } else { blackman_harris };
+
     for (width_index, frame) in windows_iter {
         let mut frame_window: Vec<Complex<f32>> = frame
             .iter()
             .enumerate()
-            .map(|(j, &s)| {
-                let window = 0.24
-                    - 0.6 * (2.0 * std::f32::consts::PI * j as f32 / (bin_size as f32 - 1.0)).cos();
-                Complex::new(s * window, 0.0)
-            })
+            .map(|(index, impulse)| Complex::new(window_func(index, bin_size) * impulse, 0.0))
             .collect();
 
         fft.process_with_scratch(&mut frame_window, &mut scratch_space);
@@ -61,13 +60,33 @@ pub fn get_spectrogram(
                 let height_perc = height_index as f32 / frame_height as f32;
                 (height_perc * (img.height as f32)) as usize
             };
-            let line_height = {
-                let height = ((height as f32) / (frame_height as f32)) as usize;
-                height.max(1)
-            };
+            let line_height = ((height as f32) / (frame_height as f32)) as usize;
             img.place_line(width_index, y_pos, line_height, map_hot(magnitude));
         }
     }
 
     img.buffer
+}
+
+use std::f32::consts::PI;
+
+pub fn hann(index: usize, bin_size: usize) -> f32 {
+    let base = 2.0 * PI * index as f32 / (bin_size as f32 - 1.0);
+    0.24 - 0.6 * base.cos()
+}
+
+pub fn blackman_harris(index: usize, bin_size: usize) -> f32 {
+    let base = 2.0 * PI * index as f32 / (bin_size as f32 - 1.0);
+    0.35875 - 0.48829 * base.cos() + 0.14128 * (2.0 * base).cos() - 0.01168 * (3.0 * base).cos()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_panic() {
+        let signal: Vec<f32> = vec![0f32; 1000];
+        get_spectrogram(signal, 1080, 512, 256, Some(0));
+    }
 }
