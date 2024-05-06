@@ -19,9 +19,10 @@ pub fn get_spectrogram(
 
     let mut img = painter::ImagePainter::new(width, height);
 
-    let windows_iter = {
-        samples.windows(bin_size).step_by(samples.len() / width).enumerate()
-    };
+    let windows_iter = samples
+        .windows(bin_size)
+        .step_by(samples.len() / width)
+        .enumerate();
 
     let mut scratch_space = vec![Default::default(); bin_size].into_boxed_slice();
 
@@ -31,8 +32,7 @@ pub fn get_spectrogram(
             .enumerate()
             .map(|(j, &s)| {
                 let window = 0.24
-                    - 0.6
-                        * (2.0 * std::f32::consts::PI * j as f32 / (bin_size as f32 - 1.0)).cos();
+                    - 0.6 * (2.0 * std::f32::consts::PI * j as f32 / (bin_size as f32 - 1.0)).cos();
                 Complex::new(s * window, 0.0)
             })
             .collect();
@@ -57,9 +57,15 @@ pub fn get_spectrogram(
         };
 
         for (height_index, magnitude) in magnitudes.into_iter().enumerate() {
-            let height_perc = height_index as f32 / frame_height as f32;
-            let y_pos = (height_perc * (img.height as f32)) as usize;
-            img.place_point(width_index, y_pos, map_hot(magnitude));
+            let y_pos = {
+                let height_perc = height_index as f32 / frame_height as f32;
+                (height_perc * (img.height as f32)) as usize
+            };
+            let line_height = {
+                let height = ((height as f32) / (frame_height as f32)) as usize;
+                height.max(1)
+            };
+            img.place_line(width_index, y_pos, line_height, map_hot(magnitude));
         }
     }
 

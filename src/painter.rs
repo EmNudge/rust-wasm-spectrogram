@@ -23,4 +23,10 @@ impl ImagePainter {
         self.buffer[base_index + 2] = color.2;
         self.buffer[base_index + 3] = 255;
     }
+
+    pub fn place_line(&mut self, x: usize, y: usize, height: usize, color: Color) {
+        for i in 0..height {
+            self.place_point(x, y + i, color)
+        }
+    }
 }
