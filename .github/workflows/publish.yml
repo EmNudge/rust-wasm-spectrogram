@@ -15,8 +15,10 @@ jobs:
         uses: jetli/wasm-pack-action@v0.4.0
         with:
           version: 'latest'
+
       - name: Build wasm
-        run: wasm-pack build -d demo/wasm
+        run: wasm-pack build -d demo/wasm -t web --release --manifest-path ./Cargo.toml -Z build-std=panic_abort,std -Z build-std-features=panic_immediate_abort
+
       - name: Delete non-wasm files
         run: find demo/wasm -type f -not -name 'wasm_*' -delete
 
